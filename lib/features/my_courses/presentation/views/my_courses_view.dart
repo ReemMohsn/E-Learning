@@ -31,9 +31,17 @@ class MyCoursesView extends StatelessWidget {
             }
             if (state is MyCoursesSuccess) {
               if (state.courses.isEmpty) {
-                return const HomeStatus(
-                  icon: Icons.library_books_outlined,
-                  message: AppStrings.noEnrolledCourses,
+                return RefreshIndicator(
+                  onRefresh: cubit.getMyCourses,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      HomeStatus(
+                        icon: Icons.library_books_outlined,
+                        message: AppStrings.noEnrolledCourses,
+                      ),
+                    ],
+                  ),
                 );
               }
               return RefreshIndicator(
@@ -44,6 +52,7 @@ class MyCoursesView extends StatelessWidget {
                         ? (constraints.maxWidth - 700) / 2
                         : 16.0;
                     return ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
                         20,
