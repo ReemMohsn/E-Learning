@@ -1,6 +1,8 @@
 import 'package:e_learning/core/constants/app_strings.dart';
 import 'package:e_learning/features/course_videos/data/models/course_video_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerView extends StatefulWidget {
@@ -13,16 +15,42 @@ class VideoPlayerView extends StatefulWidget {
 }
 
 class _VideoPlayerViewState extends State<VideoPlayerView> {
-  late final VideoPlayerController _controller;
+  late VideoPlayerController _controller;
   late final Future<void> _initializeVideo;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(
+    _controller = _createController(VideoViewType.textureView);
+    _initializeVideo = _initializePlayer();
+  }
+
+  VideoPlayerController _createController(VideoViewType viewType) {
+    return VideoPlayerController.networkUrl(
       Uri.parse(widget.video.videoUrl),
+      viewType: viewType,
     );
-    _initializeVideo = _controller.initialize();
+  }
+
+  Future<void> _initializePlayer() async {
+    try {
+      await _controller.initialize();
+    } on PlatformException catch (error) {
+      final isAndroidDecoderError =
+          !kIsWeb &&
+          defaultTargetPlatform == TargetPlatform.android &&
+          error.code == 'VideoError' &&
+          (error.message?.contains('MediaCodecVideoRenderer') ?? false);
+      if (!isAndroidDecoderError || !mounted) rethrow;
+
+      // Some MediaTek decoders cannot allocate the ImageReader buffers used by
+      // texture views. Retry with a native SurfaceView only on decoder failure.
+      // https://github.com/flutter/flutter/issues/163420
+      await _controller.dispose();
+      if (!mounted) return;
+      _controller = _createController(VideoViewType.platformView);
+      await _controller.initialize();
+    }
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'package:e_learning/core/constants/app_strings.dart';
 import 'package:e_learning/features/Profile/presentation/view/profile_screen.dart';
-import 'package:e_learning/features/Profile/presentation/view_model/profile_cubit.dart';
 import 'package:e_learning/features/home/presentation/views/home_view.dart';
 import 'package:e_learning/features/main_home/data/models/navigation_item_model.dart';
 import 'package:e_learning/features/main_home/presentation/view_model/main_home_cubit.dart';
@@ -48,6 +47,10 @@ class MainHomeView extends StatelessWidget {
             items: _items,
             onTap: (index) {
               context.read<MainHomeCubit>().changeIndex(index);
+              if (index == 1) {
+                // IndexedStack keeps this page alive after new enrollments.
+                context.read<MyCoursesCubit>().getMyCourses();
+              }
             },
           ),
         );
